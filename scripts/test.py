@@ -53,6 +53,9 @@ def main():
     remove_pre_build(Path("src") / "sexp" / "moon.pkg.json")
     subprocess.run(["moon", "check", "--target", "native"], check=True)
     test_path = Path("test")
+    subprocess.run(
+        ["moon", "test", "--target", "native"], check=True, cwd=test_path
+    )
     flags = None
     if platform.system() == "Linux":
         flags = linux_flags()
