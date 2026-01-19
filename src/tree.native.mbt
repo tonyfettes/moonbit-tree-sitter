@@ -40,16 +40,7 @@ impl Nullable with to_option(self : Self) -> Self? {
 }
 
 ///|
-extern "c" fn ts_tree_null() -> TSTree = "moonbit_c_null"
-
-///|
-#borrow(tree)
-extern "c" fn ts_tree_is_null(tree : TSTree) -> Bool = "moonbit_c_is_null"
-
-///|
-impl Nullable for TSTree with is_null(self : TSTree) -> Bool {
-  ts_tree_is_null(self)
-}
+impl Nullable for TSTree
 
 ///|
 #borrow(tree)

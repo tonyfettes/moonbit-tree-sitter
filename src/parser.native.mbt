@@ -308,7 +308,7 @@ pub fn[Encoding : DecodeFunction] Parser::parse(
     return bytes_data
   }
   let old_ts_tree = match old_tree {
-    None => ts_tree_null()
+    None => TSTree::null()
     Some(tree) => tree.tree
   }
   guard options is Some(options) else {
@@ -357,7 +357,7 @@ pub fn Parser::parse_bytes(
   bytes : Bytes,
 ) -> Tree raise ParseError {
   let old_ts_tree = match old_tree {
-    None => ts_tree_null()
+    None => TSTree::null()
     Some(tree) => tree.tree
   }
   let tree = ts_parser_parse_bytes_encoding(
@@ -403,7 +403,7 @@ pub fn Parser::parse_string(
   string : StringView,
 ) -> Tree raise ParseError {
   let old_ts_tree = match old_tree {
-    None => ts_tree_null()
+    None => TSTree::null()
     Some(tree) => tree.tree
   }
   let tree = ts_parser_parse_bytes(

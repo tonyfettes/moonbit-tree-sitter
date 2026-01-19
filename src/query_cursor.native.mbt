@@ -37,8 +37,8 @@ pub fn QueryCursor::new() -> QueryCursor {
   let cursor = ts_query_cursor_new()
   let cursor = QueryCursor::{
     cursor,
-    query: ts_query_null(),
-    tree: ts_tree_null(),
+    query: Query::null(),
+    tree: TSTree::null(),
     text: "",
   }
   cursor
@@ -282,13 +282,9 @@ pub fn QueryMatch::predicates(self : QueryMatch) -> Array[QueryPredicate] {
 priv type TSQueryMatch
 
 ///|
-#borrow(query_match)
-extern "c" fn ts_query_match_is_null(query_match : TSQueryMatch) -> Bool = "moonbit_c_is_null"
 
 ///|
-impl Nullable for TSQueryMatch with is_null(self : TSQueryMatch) -> Bool {
-  return ts_query_match_is_null(self)
-}
+impl Nullable for TSQueryMatch
 
 ///|
 #borrow(query)
