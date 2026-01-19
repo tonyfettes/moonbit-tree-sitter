@@ -167,7 +167,7 @@ extern "c" fn ts_parser_parse(
   old_tree : TSTree,
   input : (UInt, Point, FixedArray[UInt]) -> Bytes,
   encoding : InputEncoding,
-  decode : FuncRef[(@c.Pointer[Byte], UInt, @c.Pointer[Int]) -> Int],
+  decode : @c.Pointer[Unit],
 ) -> TSTree = "moonbit_ts_parser_parse"
 
 ///|
@@ -198,12 +198,9 @@ extern "c" fn ts_parser_parse_with_options(
   old_tree : TSTree,
   input : (UInt, Point, FixedArray[UInt]) -> Bytes,
   encoding : UInt,
-  decode : FuncRef[(@c.Pointer[Byte], UInt, @c.Pointer[Int]) -> Int],
+  decode : @c.Pointer[Unit],
   progress_callback : (UInt, Bool) -> Bool,
 ) -> TSTree = "moonbit_ts_parser_parse_with_options"
-
-///|
-impl[T] Nullable for FuncRef[T]
 
 ///|
 /// Use the parser to parse some source code and create a syntax tree.
@@ -251,10 +248,13 @@ pub fn[Encoding : DecodeFunction] Parser::parse(
   options? : ParseOptions,
 ) -> Tree raise ParseError {
   let encoding = input.decode.encoding()
-  let decode : FuncRef[(@c.Pointer[Byte], UInt, @c.Pointer[Int]) -> Int] = match
-    encoding {
-    Custom =>
-      (bytes, length, code_point) => {
+  let decode : @c.Pointer[Unit] = match encoding {
+    Custom => {
+      let funcref : FuncRef[(@c.Pointer[Byte], UInt, @c.Pointer[Int]) -> Int] = (
+        bytes,
+        length,
+        code_point,
+      ) => {
         let buffer = @buffer.new()
         for i in 0..<length.reinterpret_as_int() {
           buffer.write_byte(bytes[i])
@@ -268,7 +268,9 @@ pub fn[Encoding : DecodeFunction] Parser::parse(
           None => -1
         }
       }
-    _ => Nullable::null()
+      @c.Pointer::unsafe_from(funcref)
+    }
+    _ => @c.Pointer::null()
   }
   let mut stage : BytesView = []
   let text = StringBuilder::new()
