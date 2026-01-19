@@ -1,5 +1,5 @@
 ///|
-pub(all) type Language @tree_sitter_language.Language
+pub(all) struct Language(@tree_sitter_language.Language)
 
 ///|
 extern "c" fn ts_language_copy(language : Language) -> Language = "moonbit_ts_language_copy"
@@ -39,23 +39,20 @@ pub fn Language::state_count(self : Language) -> Int {
 }
 
 ///|
-type Symbol UInt
+struct Symbol(UInt)
 
 ///|
 /// Get the numerical id for the given node type string.
 #borrow(name)
 extern "c" fn ts_language_symbol_for_name_(
   language : Language,
-  name : Bytes
+  name : Bytes,
 ) -> UInt16 = "moonbit_ts_language_symbol_for_name"
 
 ///|
 /// Get the numerical id for the given node type string.
-pub fn Language::symbol_for_name(
-  self : Language,
-  name : @string.View
-) -> Symbol? {
-  let name_bytes = @encoding.encode(encoding=UTF8, name)
+pub fn Language::symbol_for_name(self : Language, name : StringView) -> Symbol? {
+  let name_bytes = @encoding/utf8.encode(name)
   let symbol = ts_language_symbol_for_name_(self, name_bytes)
   if symbol == 0 {
     return None
@@ -65,7 +62,7 @@ pub fn Language::symbol_for_name(
 }
 
 ///|
-type FieldId UInt16
+struct FieldId(UInt16)
 
 ///|
 extern "c" fn ts_language_field_count(language : Language) -> Int = "moonbit_ts_language_field_count"
@@ -79,8 +76,8 @@ pub fn Language::field_count(self : Language) -> Int {
 ///|
 extern "c" fn ts_language_field_name_for_id(
   language : Language,
-  id : FieldId
-) -> @native.ConstPtr[Byte] = "moonbit_ts_language_field_name_for_id"
+  id : FieldId,
+) -> @c.Pointer[Byte] = "moonbit_ts_language_field_name_for_id"
 
 ///|
 /// Get the field name string for the given numerical id.
@@ -90,26 +87,23 @@ pub fn Language::field_name_for_id(self : Language, id : FieldId) -> String? {
 }
 
 ///|
-fn decode_c_string(c_string : @native.ConstPtr[Byte], length? : Int) -> String? {
+fn decode_c_string(c_string : @c.Pointer[Byte], length? : Int) -> String? {
   if c_string.is_null() {
     return None
   }
   let buffer = @buffer.new()
   match length {
-    None => {
-      let mut p = c_string
-      while p.get() != 0 {
-        buffer.write_byte(p.get())
-        p = p.add(1)
+    None =>
+      for i = 0; c_string[i] != 0; i = i + 1 {
+        buffer.write_byte(c_string[i])
       }
-    }
     Some(length) =>
       for i = 0; i < length; i = i + 1 {
-        buffer.write_byte(c_string.add(i.to_int64()).get())
+        buffer.write_byte(c_string[i])
       }
   }
   let name = buffer.contents()
-  let name = @encoding.decode_lossy(encoding=UTF8, name)
+  let name = @encoding/utf8.decode_lossy(name)
   Some(name)
 }
 
@@ -117,13 +111,13 @@ fn decode_c_string(c_string : @native.ConstPtr[Byte], length? : Int) -> String? 
 #borrow(name)
 extern "c" fn ts_language_field_id_for_name(
   language : Language,
-  name : Bytes
+  name : Bytes,
 ) -> UInt = "moonbit_ts_language_field_id_for_name"
 
 ///|
 /// Get the numerical id for the given field name string.
-pub fn Language::field_id_for_name(self : Language, name : @string.View) -> Int {
-  let name_bytes = @encoding.encode(encoding=UTF8, name)
+pub fn Language::field_id_for_name(self : Language, name : StringView) -> Int {
+  let name_bytes = @encoding/utf8.encode(name)
   ts_language_field_id_for_name(self, name_bytes) |> uint_to_int()
 }
 
@@ -150,8 +144,8 @@ pub fn Language::subtypes(self : Language) -> Array[Symbol] {
 ///|
 extern "c" fn ts_language_symbol_name(
   language : Language,
-  symbol : Symbol
-) -> @native.ConstPtr[Byte] = "moonbit_ts_language_symbol_name"
+  symbol : Symbol,
+) -> @c.Pointer[Byte] = "moonbit_ts_language_symbol_name"
 
 ///|
 /// Get a node type string for the given numerical id.
@@ -194,7 +188,7 @@ fn SymbolType::to_int(self : SymbolType) -> UInt {
 ///|
 extern "c" fn ts_language_symbol_type(
   language : Language,
-  symbol : Symbol
+  symbol : Symbol,
 ) -> UInt = "moonbit_ts_language_symbol_type"
 
 ///|
@@ -240,21 +234,21 @@ pub fn Language::abi_version(self : Language) -> Int {
 /// of the language. This version information should be used to signal if a given parser might
 /// be incompatible with existing queries when upgrading between major versions, or minor versions
 /// if it's in zerover.
-type LanguageMetadata Bytes
+struct LanguageMetadata(Bytes)
 
 ///|
 pub fn LanguageMetadata::major_version(self : LanguageMetadata) -> Byte {
-  self.inner()[0]
+  self.0[0]
 }
 
 ///|
 pub fn LanguageMetadata::minor_version(self : LanguageMetadata) -> Byte {
-  self.inner()[1]
+  self.0[1]
 }
 
 ///|
 pub fn LanguageMetadata::patch_version(self : LanguageMetadata) -> Byte {
-  self.inner()[2]
+  self.0[2]
 }
 
 ///|
@@ -271,13 +265,13 @@ pub fn Language::metadata(self : Language) -> LanguageMetadata {
 }
 
 ///|
-type StateId UInt16
+struct StateId(UInt16)
 
 ///|
 extern "c" fn ts_language_next_state(
   language : Language,
   state : StateId,
-  symbol : Symbol
+  symbol : Symbol,
 ) -> StateId = "moonbit_ts_language_next_state"
 
 ///|
@@ -287,17 +281,17 @@ extern "c" fn ts_language_next_state(
 pub fn Language::next_state(
   self : Language,
   state : StateId,
-  symbol : Symbol
+  symbol : Symbol,
 ) -> StateId {
   return ts_language_next_state(self, state, symbol)
 }
 
 ///|
-extern "c" fn ts_language_name(language : Language) -> @native.ConstPtr[Byte] = "moonbit_ts_language_name"
+extern "c" fn ts_language_name(language : Language) -> @c.Pointer[Byte] = "moonbit_ts_language_name"
 
 ///|
 /// Get the name of this language. This returns `None` in older parsers.
 pub fn Language::name(self : Language) -> String? {
-  let name = ts_language_name(self.inner())
+  let name = ts_language_name(self.0)
   return decode_c_string(name)
 }

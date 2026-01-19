@@ -53,7 +53,8 @@ extern "js" fn ts_tree_root_node(tree : Tree) -> Node =
   #|  return tree.rootNode;
   #|}
 
-///| Get the root node of the syntax tree.
+///|
+/// Get the root node of the syntax tree.
 pub fn Tree::root_node(self : Tree) -> Node {
   ts_tree_root_node(self)
 }
@@ -62,7 +63,7 @@ pub fn Tree::root_node(self : Tree) -> Node {
 extern "js" fn ts_tree_root_node_with_offset(
   tree : Tree,
   offset_bytes : UInt,
-  offset_extent : Point
+  offset_extent : Point,
 ) -> Node =
   #|(tree, offsetBytes, offsetExtent) => {
   #|  return tree.rootNodeWithOffset(offset_bytes, offset_extent);
@@ -74,7 +75,7 @@ extern "js" fn ts_tree_root_node_with_offset(
 pub fn Tree::root_node_with_offset(
   self : Tree,
   offset_bytes : Int,
-  offset_extent : Point
+  offset_extent : Point,
 ) -> Node {
   ts_tree_root_node_with_offset(self, int_to_uint(offset_bytes), offset_extent)
 }
@@ -122,7 +123,7 @@ pub fn Tree::edit(self : Tree, edit : InputEdit) -> Unit {
 ///|
 extern "js" fn ts_tree_get_changed_ranges(
   tree : Tree,
-  other : Tree
+  other : Tree,
 ) -> Array[Range] =
   #|(tree, other) => {
   #|  return tree.getChangedRanges(other);
@@ -151,7 +152,7 @@ pub fn Tree::get_changed_ranges(self : Tree, other : Tree) -> Array[Range] {
 ///|
 pub fn Tree::query(
   self : Tree,
-  query : @string.View
+  query : StringView,
 ) -> QueryCursor raise QueryError {
   self.root_node().query(query)
 }

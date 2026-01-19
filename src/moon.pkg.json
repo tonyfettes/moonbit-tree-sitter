@@ -43,13 +43,11 @@
     "tree.native.mbt": ["native"]
   },
   "import": [
-    "tonyfettes/encoding",
     "tonyfettes/c",
     "tonyfettes/tree_sitter/grammar",
     "tonyfettes/tree_sitter/node_types",
     "tonyfettes/tree_sitter_language",
-    "tonyfettes/tree_sitter/sexp",
-    "illusory0x0/native"
+    "tonyfettes/tree_sitter/sexp"
   ],
   "supported-targets": ["native"],
   "native-stub": ["tree-sitter.c"],

@@ -17,10 +17,10 @@ test "input creation and usage" {
         end = source.length()
       }
       let view = source.view(start_offset=start, end_offset=end)
-      let bytes = @encoding.encode(encoding=@encoding.UTF8, view)
+      let bytes = @encoding/utf8.encode(view)
       return bytes
     },
-    @encoding.UTF8,
+    InputEncoding::UTF8,
   )
 
   // Parse with our custom input
@@ -29,6 +29,6 @@ test "input creation and usage" {
   // Verify the result
   let root = tree.root_node()
   inspect(root.child_count() > 0, content="true")
-  let object_node = root.child(0).or_error(Failure("No object node found"))
+  let object_node = root.child(0).unwrap_or_error(@builtin.Failure("No object node found"))
   inspect(object_node.type_(), content="object")
 }

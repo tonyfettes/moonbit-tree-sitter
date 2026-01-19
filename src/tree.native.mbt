@@ -4,13 +4,31 @@ priv type TSTree
 ///|
 struct Tree {
   tree : TSTree
-  text : @string.View
+  text : StringView
 }
 
 ///|
 priv trait Nullable {
-  is_null(Self) -> Bool
+  null() -> Self = _
+  is_null(Self) -> Bool = _
   to_option(Self) -> Self? = _
+}
+
+///|
+fn[T] any_from_null(c : @c.Pointer[Unit]) -> T = "%identity"
+
+///|
+impl Nullable with null() -> Self {
+  any_from_null(@c.Pointer::null())
+}
+
+///|
+fn[A, B] ref_eq(a : A, b : B) -> Bool = "%refeq"
+
+///|
+impl Nullable with is_null(self : Self) -> Bool {
+  let null : @c.Pointer[Unit] = @c.Pointer::null()
+  ref_eq(self, null)
 }
 
 ///|
@@ -50,7 +68,8 @@ pub fn Tree::copy(self : Tree) -> Tree {
 #borrow(tree)
 extern "c" fn ts_tree_root_node(tree : TSTree) -> TSNode = "moonbit_ts_tree_root_node"
 
-///| Get the root node of the syntax tree.
+///|
+/// Get the root node of the syntax tree.
 pub fn Tree::root_node(self : Tree) -> Node {
   Node::{ node: ts_tree_root_node(self.tree), tree: self.tree, text: self.text }
 }
@@ -60,7 +79,7 @@ pub fn Tree::root_node(self : Tree) -> Node {
 extern "c" fn ts_tree_root_node_with_offset(
   tree : TSTree,
   offset_bytes : UInt,
-  offset_extent : Point
+  offset_extent : Point,
 ) -> TSNode = "moonbit_ts_tree_root_node_with_offset"
 
 ///|
@@ -69,7 +88,7 @@ extern "c" fn ts_tree_root_node_with_offset(
 pub fn Tree::root_node_with_offset(
   self : Tree,
   offset_bytes : Int,
-  offset_extent : Point
+  offset_extent : Point,
 ) -> Node {
   let node = ts_tree_root_node_with_offset(
     self.tree,
@@ -125,7 +144,7 @@ pub fn Tree::edit(self : Tree, edit : InputEdit) -> Unit {
 #borrow(tree, other)
 extern "c" fn ts_tree_get_changed_ranges(
   tree : TSTree,
-  other : TSTree
+  other : TSTree,
 ) -> FixedArray[UInt] = "moonbit_ts_tree_get_changed_ranges"
 
 ///|
@@ -164,7 +183,7 @@ pub fn Tree::walk(self : Tree) -> TreeCursor {
 ///|
 pub fn Tree::query(
   self : Tree,
-  source : @string.View
+  source : StringView,
 ) -> QueryCursor raise QueryError {
   self.root_node().query(source)
 }

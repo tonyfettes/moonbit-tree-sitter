@@ -4,7 +4,6 @@ import(
   "moonbitlang/core/builtin"
   "moonbitlang/core/bytes"
   "moonbitlang/core/string"
-  "tonyfettes/encoding"
   "tonyfettes/tree_sitter_language"
 )
 
@@ -22,7 +21,7 @@ fn DecodeResult::new(code_point~ : Char, bytes_read~ : Int) -> Self
 type FieldId
 
 type Input[DecodeFunction]
-fn[DecodeFunction : DecodeFunction] Input::new((Int, Point) -> @bytes.View, DecodeFunction) -> Self[DecodeFunction]
+fn[DecodeFunction : DecodeFunction] Input::new((Int, Point) -> BytesView, DecodeFunction) -> Self[DecodeFunction]
 
 type InputEdit
 fn InputEdit::new(start_byte~ : Int, old_end_byte~ : Int, new_end_byte~ : Int, start_point~ : Point, old_end_point~ : Point, new_end_point~ : Point) -> Self
@@ -297,7 +296,7 @@ pub typealias Array[QueryPredicateStep] as QueryPredicate
 // Traits
 pub(open) trait DecodeFunction {
   encoding(Self) -> InputEncoding = _
-  decode(@bytes.View) -> DecodeResult?
+  decode(BytesView) -> DecodeResult?
 }
 impl DecodeFunction for @encoding.Encoding
 

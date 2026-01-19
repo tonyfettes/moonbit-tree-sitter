@@ -1,9 +1,9 @@
 ///|
-type Range (Int, Int) derive(Eq, Hash, ToJson)
+struct Range(Int, Int) derive(Eq, Hash, ToJson)
 
 ///|
 impl Show for Range with output(self : Range, logger : &@builtin.Logger) -> Unit {
-  logger.write_object(self.inner())
+  logger.write_object(self.0)
 }
 
 ///|
@@ -16,7 +16,7 @@ struct Environment {
 fn Environment::add_var(
   self : Environment,
   name : String,
-  range : Range
+  range : Range,
 ) -> Unit {
   self.ranges[range] = name
   match self.vars.get(name) {
@@ -41,7 +41,7 @@ suberror PatternError {
 fn pattern_query(
   parser : @tree_sitter.Parser,
   env : Environment,
-  pattern : @string.View
+  pattern : StringView,
 ) -> Query raise {
   struct Context {
     replaced : StringBuilder
@@ -103,7 +103,7 @@ fn pattern_query(
       match context.variable {
         None => context.variable = Some((offset, StringBuilder::new()))
         Some((start, name)) => {
-          env.add_var(name.to_string(), (start, offset))
+          env.add_var(name.to_string(), Range(start, offset))
           context.variable = Some((offset, StringBuilder::new()))
         }
       }
@@ -122,13 +122,13 @@ fn pattern_query(
             continue (offset + 1, pattern)
           } else {
             context.replaced.write_char(char)
-            env.add_var(name.to_string(), (start, offset))
+            env.add_var(name.to_string(), Range(start, offset))
             continue (offset + 1, pattern)
           }
       }
     (offset, []) =>
       if context.variable is Some((start, name)) {
-        env.add_var(name.to_string(), (start, offset))
+        env.add_var(name.to_string(), Range(start, offset))
       }
   }
   guard context.start is Some(pattern_start) && context.end is Some(pattern_end) else {
@@ -140,8 +140,8 @@ fn pattern_query(
   let capture_name : Array[String] = []
   fn generate_pattern(
     node : @tree_sitter.Node,
-    stripping : Bool?
-  ) -> @string.View {
+    stripping : Bool?,
+  ) -> StringView {
     if node.start_byte() <= pattern_start || node.end_byte() >= pattern_end {
       let child_patterns = []
       for child in node.children() {
@@ -180,7 +180,7 @@ fn pattern_query(
     if not(node.is_named()) {
       if node.type_() == "_" {
         for range, name in env.ranges {
-          if node.start_byte() == range.inner().0 {
+          if node.start_byte() == range.0 {
             let mut exists = false
             for old_name in capture_name {
               if old_name == name {
@@ -249,9 +249,9 @@ test "pattern" {
   let pattern_query = pattern_query(parser, env, pattern)
   inspect(
     pattern_query.source,
-    content=
+    content=(
       #|(binary_expression (_) @A ("==") (_) @A) @pattern
-    ,
+    ),
   )
   let query_cursor = source_tree.query(pattern_query.source)
   let ranges = []

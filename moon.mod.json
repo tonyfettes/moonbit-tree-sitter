@@ -3,19 +3,18 @@
   "version": "0.4.3",
   "deps": {
     "tonyfettes/tree_sitter_language": "0.1.1",
-    "illusory0x0/native": "0.1.4",
-    "tonyfettes/encoding": "0.3.1",
     "tonyfettes/tree_sitter_moonbit": "0.1.22",
     "tonyfettes/tree_sitter_json": "0.1.16",
     "tonyfettes/tree_sitter_markdown": "0.1.16",
     "tonyfettes/tree_sitter_yaml": "0.1.16",
-    "tonyfettes/uv": "0.6.1",
-    "tonyfettes/c": "0.1.13"
+    "tonyfettes/uv": "0.12.11",
+    "tonyfettes/c": "0.7.3"
   },
   "readme": "README.md",
   "repository": "https://github.com/tonyfettes/moonbit-tree-sitter",
   "license": "Apache-2.0",
   "keywords": [],
   "description": "A MoonBit binding to the tree-sitter parsing library",
-  "source": "src"
+  "source": "src",
+  "preferred-target": "native"
 }

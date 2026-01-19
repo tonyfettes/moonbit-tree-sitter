@@ -11,7 +11,7 @@ test "json" {
   let root_node = tree.root_node()
   inspect(
     root_node,
-    content=
+    content=(
       #|(document
       #| (object
       #|  (pair
@@ -23,12 +23,14 @@ test "json" {
       #|   key: (string
       #|         (string_content))
       #|   value: (number))))
-    ,
+    ),
   )
-  let root_node_first_child = root_node.child(0).or_error(Failure("None"))
+  let root_node_first_child = root_node
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("None"))
   inspect(
     root_node_first_child,
-    content=
+    content=(
       #|(object
       #| (pair
       #|  key: (string
@@ -39,7 +41,7 @@ test "json" {
       #|  key: (string
       #|        (string_content))
       #|  value: (number)))
-    ,
+    ),
   )
 }
 
@@ -69,8 +71,8 @@ test "moonbit" {
     let comment_node = match_
       .captures()
       .filter(fn(x) { x.name() == "comment" })
-      .peek()
-      .or_error(Failure("No comment found"))
+      .next()
+      .unwrap_or_error(@builtin.Failure("No comment found"))
       .node()
     let start_byte = comment_node.start_byte()
     let end_byte = comment_node.end_byte()
@@ -85,18 +87,18 @@ test "moonbit" {
   let comment_document = comment_document.join("\n")
   inspect(
     comment_document.to_string(),
-    content=
+    content=(
       #|# Heading
       #|
       #|Paragraph with *italic* and **bold** text.
-    ,
+    ),
   )
   parser.set_language(@tree_sitter_markdown.language())
   let markdown_tree = parser.parse_string(comment_document.to_string())
   let markdown_root_node = markdown_tree.root_node()
   inspect(
     markdown_root_node,
-    content=
+    content=(
       #|(document
       #| (section
       #|  (atx_heading
@@ -104,7 +106,7 @@ test "moonbit" {
       #|   heading_content: (inline))
       #|  (paragraph
       #|   (inline))))
-    ,
+    ),
   )
 }
 
@@ -150,16 +152,14 @@ test "markdown" {
 struct UTF32BE {}
 
 ///|
-impl @tree_sitter.DecodeFunction for UTF32BE with decode(bytes : @bytes.View) -> @tree_sitter.DecodeResult? {
+impl @tree_sitter.DecodeFunction for UTF32BE with decode(bytes : BytesView) -> @tree_sitter.DecodeResult? {
   match bytes {
-    [a, b, c, d, .. _bytes] => {
-      let bytes : Bytes = [a, b, c, d]
-      match bytes[:].to_int_be().to_char() {
+    [i32be(cp), .. _bytes] =>
+      match cp.to_char() {
         Some(code_point) =>
           Some(@tree_sitter.DecodeResult::new(code_point~, bytes_read=4))
         None => None
       }
-    }
     [.. _bytes] => None
   }
 }
@@ -185,7 +185,7 @@ test "custom-encoding" {
   let input = @tree_sitter.Input::new(
     fn(offset, _) {
       let start = offset
-      let end = @math.minimum(offset + 4, source_bytes.length())
+      let end = @cmp.minimum(offset + 4, source_bytes.length())
       return source_bytes[start:end]
     },
     UTF32BE::{  },
@@ -194,7 +194,7 @@ test "custom-encoding" {
   let root_node = tree.root_node()
   inspect(
     root_node,
-    content=
+    content=(
       #|(document
       #| (object
       #|  (pair
@@ -206,6 +206,6 @@ test "custom-encoding" {
       #|   key: (string
       #|         (string_content))
       #|   value: (number))))
-    ,
+    ),
   )
 }

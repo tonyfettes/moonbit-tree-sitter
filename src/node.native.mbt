@@ -1,19 +1,16 @@
 ///|
-priv type TSNode Bytes
+priv struct TSNode(Bytes)
 
 ///|
 struct Node {
   node : TSNode
   tree : TSTree
-  text : @string.View
+  text : StringView
 }
 
 ///|
 #borrow(node, tree)
-extern "c" fn ts_node_type(
-  node : TSNode,
-  tree : TSTree
-) -> @native.ConstPtr[Byte] = "moonbit_ts_node_type"
+extern "c" fn ts_node_type(node : TSNode, tree : TSTree) -> @c.Pointer[Byte] = "moonbit_ts_node_type"
 
 ///|
 /// Get the node's type as a string.
@@ -45,8 +42,8 @@ pub fn Node::language(self : Node) -> Language {
 #borrow(node, tree)
 extern "c" fn ts_node_grammar_type(
   node : TSNode,
-  tree : TSTree
-) -> @native.ConstPtr[Byte] = "moonbit_ts_node_grammar_type"
+  tree : TSTree,
+) -> @c.Pointer[Byte] = "moonbit_ts_node_grammar_type"
 
 ///|
 /// Get the node's type as it appears in the grammar ignoring aliases as a string.
@@ -123,10 +120,7 @@ pub fn Node::range(self : Node) -> Range {
 ///|
 /// Get an S-expression representing the node as a string.
 pub fn Node::string(self : Node) -> String {
-  return @encoding.decode_lossy(
-    encoding=UTF8,
-    ts_node_string(self.node, self.tree),
-  )
+  return @encoding/utf8.decode_lossy(ts_node_string(self.node, self.tree))
 }
 
 ///|
@@ -254,7 +248,7 @@ extern "c" fn ts_node_child_with_descendant(
   node : TSNode,
   self_tree : TSTree,
   descendant : TSNode,
-  descendant_tree : TSTree
+  descendant_tree : TSTree,
 ) -> TSNode = "moonbit_ts_node_child_with_descendant"
 
 ///|
@@ -280,7 +274,7 @@ pub fn Node::child_with_descendant(self : Node, descendant : Node) -> Node? {
 extern "c" fn ts_node_child(
   node : TSNode,
   tree : TSTree,
-  index : UInt
+  index : UInt,
 ) -> TSNode = "moonbit_ts_node_child"
 
 ///|
@@ -311,15 +305,13 @@ pub fn Node::child(self : Node, index : Int) -> Node? {
 ///|
 /// Get all children of the node.
 pub fn Node::children(self : Node) -> Iter[Node] {
-  Iter::new(fn(yield_) {
-    for i in 0U..<ts_node_child_count(self.node, self.tree) {
-      let child = ts_node_child(self.node, self.tree, i)
-      match yield_({ ..self, node: child }) {
-        IterEnd => return IterEnd
-        IterContinue => continue
-      }
-    }
-    IterContinue
+  let mut i = 0U
+  let count = ts_node_child_count(self.node, self.tree)
+  Iter::new(() => {
+    guard i < count else { None }
+    let child = ts_node_child(self.node, self.tree, i)
+    i += 1
+    Some({ ..self, node: child })
   })
 }
 
@@ -328,8 +320,8 @@ pub fn Node::children(self : Node) -> Iter[Node] {
 extern "c" fn ts_node_field_name_for_child(
   node : TSNode,
   tree : TSTree,
-  child_index : UInt
-) -> @native.ConstPtr[Byte] = "moonbit_ts_node_field_name_for_child"
+  child_index : UInt,
+) -> @c.Pointer[Byte] = "moonbit_ts_node_field_name_for_child"
 
 ///|
 /// Get the field name for node's child at the given index, where zero represents
@@ -349,15 +341,15 @@ pub fn Node::field_name_for_child(self : Node, child_index : Int) -> String? {
 extern "c" fn ts_node_field_name_for_named_child(
   node : TSNode,
   tree : TSTree,
-  child_index : UInt
-) -> @native.ConstPtr[Byte] = "moonbit_ts_node_field_name_for_named_child"
+  child_index : UInt,
+) -> @c.Pointer[Byte] = "moonbit_ts_node_field_name_for_named_child"
 
 ///|
 /// Get the field name for node's named child at the given index, where zero
 /// represents the first named child. Returns `None`, if no field is found.
 pub fn Node::field_name_for_named_child(
   self : Node,
-  child_index : Int
+  child_index : Int,
 ) -> String? {
   let child_index = int_to_uint(child_index)
   let field_name = ts_node_field_name_for_named_child(
@@ -383,7 +375,7 @@ pub fn Node::child_count(self : Node) -> Int {
 extern "c" fn ts_node_named_child(
   node : TSNode,
   tree : TSTree,
-  child_index : UInt
+  child_index : UInt,
 ) -> TSNode = "moonbit_ts_node_named_child"
 
 ///|
@@ -415,15 +407,13 @@ pub fn Node::named_child_count(self : Node) -> Int {
 ///|
 /// Get all named children of the node.
 pub fn Node::named_children(self : Node) -> Iter[Node] {
-  Iter::new(fn(yield_) {
-    for i in 0U..<ts_node_named_child_count(self.node, self.tree) {
-      let child = ts_node_named_child(self.node, self.tree, i)
-      match yield_({ ..self, node: child }) {
-        IterEnd => return IterEnd
-        IterContinue => continue
-      }
-    }
-    IterContinue
+  let mut i = 0U
+  let count = ts_node_named_child_count(self.node, self.tree)
+  Iter::new(() => {
+    guard i < count else { None }
+    let child = ts_node_named_child(self.node, self.tree, i)
+    i += 1
+    Some({ ..self, node: child })
   })
 }
 
@@ -433,13 +423,13 @@ pub fn Node::named_children(self : Node) -> Iter[Node] {
 extern "c" fn ts_node_child_by_field_name(
   node : TSNode,
   tree : TSTree,
-  name : Bytes
+  name : Bytes,
 ) -> TSNode = "moonbit_ts_node_child_by_field_name"
 
 ///|
 /// Get the node's child with the given field name.
-pub fn Node::child_by_field_name(self : Node, name : @string.View) -> Node? {
-  let name_bytes = @encoding.encode(encoding=UTF8, name)
+pub fn Node::child_by_field_name(self : Node, name : StringView) -> Node? {
+  let name_bytes = @encoding/utf8.encode(name)
   let child = ts_node_child_by_field_name(self.node, self.tree, name_bytes)
   if ts_node_is_null(child, self.tree) {
     None
@@ -453,7 +443,7 @@ pub fn Node::child_by_field_name(self : Node, name : @string.View) -> Node? {
 extern "c" fn ts_node_child_by_field_id(
   node : TSNode,
   tree : TSTree,
-  id : FieldId
+  id : FieldId,
 ) -> TSNode = "moonbit_ts_node_child_by_field_id"
 
 ///|
@@ -504,7 +494,7 @@ pub fn Node::prev_sibling(self : Node) -> Node? {
 #borrow(node, tree)
 extern "c" fn ts_node_next_named_sibling(
   node : TSNode,
-  tree : TSTree
+  tree : TSTree,
 ) -> TSNode = "moonbit_ts_node_next_named_sibling"
 
 ///|
@@ -522,7 +512,7 @@ pub fn Node::next_named_sibling(self : Node) -> Node? {
 #borrow(node, tree)
 extern "c" fn ts_node_prev_named_sibling(
   node : TSNode,
-  tree : TSTree
+  tree : TSTree,
 ) -> TSNode = "moonbit_ts_node_prev_named_sibling"
 
 ///|
@@ -541,7 +531,7 @@ pub fn Node::prev_named_sibling(self : Node) -> Node? {
 extern "c" fn ts_node_first_child_for_byte(
   node : TSNode,
   tree : TSTree,
-  byte : UInt
+  byte : UInt,
 ) -> TSNode = "moonbit_ts_node_first_child_for_byte"
 
 ///|
@@ -561,7 +551,7 @@ pub fn Node::first_child_for_byte(self : Node, byte : Int) -> Node? {
 extern "c" fn ts_node_first_named_child_for_byte(
   node : TSNode,
   tree : TSTree,
-  byte : UInt
+  byte : UInt,
 ) -> TSNode = "moonbit_ts_node_first_named_child_for_byte"
 
 ///|
@@ -592,7 +582,7 @@ extern "c" fn ts_node_descendant_for_byte_range(
   node : TSNode,
   tree : TSTree,
   start_byte : UInt,
-  end_byte : UInt
+  end_byte : UInt,
 ) -> TSNode = "moonbit_ts_node_descendant_for_byte_range"
 
 ///|
@@ -600,7 +590,7 @@ extern "c" fn ts_node_descendant_for_byte_range(
 pub fn Node::descendant_for_byte_range(
   self : Node,
   start_byte : Int,
-  end_byte : Int
+  end_byte : Int,
 ) -> Node? {
   let start_byte = int_to_uint(start_byte)
   let end_byte = int_to_uint(end_byte)
@@ -623,7 +613,7 @@ extern "c" fn ts_node_descendant_for_point_range(
   node : TSNode,
   tree : TSTree,
   start_point : Point,
-  end_point : Point
+  end_point : Point,
 ) -> TSNode = "moonbit_ts_node_descendant_for_point_range"
 
 ///|
@@ -632,7 +622,7 @@ extern "c" fn ts_node_descendant_for_point_range(
 pub fn Node::descendant_for_point_range(
   self : Node,
   start_point : Point,
-  end_point : Point
+  end_point : Point,
 ) -> Node? {
   let descendant = ts_node_descendant_for_point_range(
     self.node,
@@ -653,7 +643,7 @@ extern "c" fn ts_node_named_descendant_for_byte_range(
   node : TSNode,
   tree : TSTree,
   start_byte : UInt,
-  end_byte : UInt
+  end_byte : UInt,
 ) -> TSNode = "moonbit_ts_node_named_descendant_for_byte_range"
 
 ///|
@@ -662,7 +652,7 @@ extern "c" fn ts_node_named_descendant_for_byte_range(
 pub fn Node::named_descendant_for_byte_range(
   self : Node,
   start_byte : Int,
-  end_byte : Int
+  end_byte : Int,
 ) -> Node? {
   let start_byte = int_to_uint(start_byte)
   let end_byte = int_to_uint(end_byte)
@@ -685,7 +675,7 @@ extern "c" fn ts_node_named_descendant_for_point_range(
   node : TSNode,
   tree : TSTree,
   start_point : Point,
-  end_point : Point
+  end_point : Point,
 ) -> TSNode = "moonbit_ts_node_named_descendant_for_point_range"
 
 ///|
@@ -694,7 +684,7 @@ extern "c" fn ts_node_named_descendant_for_point_range(
 pub fn Node::named_descendant_for_point_range(
   self : Node,
   start_point : Point,
-  end_point : Point
+  end_point : Point,
 ) -> Node? {
   let descendant = ts_node_named_descendant_for_point_range(
     self.node,
@@ -731,7 +721,7 @@ extern "c" fn ts_node_eq(
   node : TSNode,
   self_tree : TSTree,
   other : TSNode,
-  other_tree : TSTree
+  other_tree : TSTree,
 ) -> Bool = "moonbit_ts_node_eq"
 
 ///|
@@ -741,7 +731,7 @@ pub fn Node::eq(self : Node, other : Node) -> Bool {
 }
 
 ///|
-pub impl Eq for Node with op_equal(self, other) -> Bool {
+pub impl Eq for Node with equal(self, other) -> Bool {
   ts_node_eq(self.node, self.tree, other.node, other.tree)
 }
 
@@ -758,7 +748,7 @@ pub impl ToJson for Node with to_json(self : Node) -> Json {
 }
 
 ///|
-#borrow(self)
+#borrow(self, tree)
 extern "c" fn Node::id_as_uint64(self : TSNode, tree : TSTree) -> UInt64 = "moonbit_ts_node_id_as_uint64"
 
 ///|
@@ -775,7 +765,7 @@ pub fn Node::walk(self : Node) -> TreeCursor {
 ///|
 pub fn Node::query(
   self : Node,
-  source : @string.View
+  source : StringView,
 ) -> QueryCursor raise QueryError {
   let query = Query::new(self.language(), source)
   let query_cursor = QueryCursor::new()
@@ -784,7 +774,7 @@ pub fn Node::query(
 }
 
 ///|
-pub fn Node::text(self : Node) -> @string.View {
+pub fn Node::text(self : Node) -> StringView {
   let start = self.start_byte()
   let end = self.end_byte()
   let text = self.text.view(start_offset=start, end_offset=end)
@@ -795,32 +785,24 @@ pub fn Node::text(self : Node) -> @string.View {
 pub fn Node::symbols(self : Node) -> Iter[Symbol] {
   let iterator = LookaheadIterator::new(self.language(), self.parse_state())
   guard iterator is Some(iterator) else { Iter::empty() }
-  Iter::new(fn(yield_) {
-    while iterator.next() {
-      let symbol = iterator.current_symbol()
-      match yield_(symbol) {
-        IterEnd => break IterEnd
-        IterContinue => continue
-      }
-    } else {
-      IterContinue
-    }
+  Iter::new(() => {
+    guard iterator.next() else { None }
+    Some(iterator.current_symbol())
   })
 }
 
 ///|
 pub fn Node::symbol_names(self : Node) -> Iter[String] {
   let language = self.language()
-  Iter::new(fn(yield_) {
-    for symbol in self.symbols() {
-      guard language.symbol_name(symbol) is Some(name) else { continue }
-      match yield_(name) {
-        IterContinue => continue
-        IterEnd => break IterEnd
-      }
-    } else {
-      IterContinue
+  let symbols = self.symbols()
+  Iter::new(() => while symbols.next() is Some(symbol) {
+    let symbol_name = language.symbol_name(symbol)
+    if symbol_name is None {
+      continue
     }
+    break symbol_name
+  } else {
+    None
   })
 }
 
@@ -831,31 +813,23 @@ pub fn Node::next_symbols(self : Node) -> Iter[Symbol] {
     self.next_parse_state(),
   )
   guard iterator is Some(iterator) else { Iter::empty() }
-  Iter::new(fn(yield_) {
-    while iterator.next() {
-      let symbol = iterator.current_symbol()
-      match yield_(symbol) {
-        IterEnd => break IterEnd
-        IterContinue => continue
-      }
-    } else {
-      IterContinue
-    }
+  Iter::new(() => {
+    guard iterator.next() else { None }
+    Some(iterator.current_symbol())
   })
 }
 
 ///|
 pub fn Node::next_symbol_names(self : Node) -> Iter[String] {
   let language = self.language()
-  Iter::new(fn(yield_) {
-    for symbol in self.next_symbols() {
-      guard language.symbol_name(symbol) is Some(name) else { continue }
-      match yield_(name) {
-        IterContinue => continue
-        IterEnd => break IterEnd
-      }
-    } else {
-      IterContinue
+  let symbols = self.next_symbols()
+  Iter::new(() => while symbols.next() is Some(symbol) {
+    let symbol_name = language.symbol_name(symbol)
+    if symbol_name is None {
+      continue
     }
+    break symbol_name
+  } else {
+    None
   })
 }

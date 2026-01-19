@@ -1,6 +1,1 @@
-{
-  "test-import": [
-    "tonyfettes/uv/async",
-    "tonyfettes/tree_sitter"
-  ]
-}
+{}

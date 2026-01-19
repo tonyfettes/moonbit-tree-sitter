@@ -1,13 +1,13 @@
 ///|
 struct Input[DecodeFunction] {
-  read : (UInt, Point) -> @bytes.View
+  read : (UInt, Point) -> BytesView
   decode : DecodeFunction
 }
 
 ///|
 pub fn[DecodeFunction : DecodeFunction] Input::new(
-  read : (Int, Point) -> @bytes.View,
-  decode : DecodeFunction
+  read : (Int, Point) -> BytesView,
+  decode : DecodeFunction,
 ) -> Input[DecodeFunction] {
   {
     read: fn(byte, point) {
@@ -19,7 +19,7 @@ pub fn[DecodeFunction : DecodeFunction] Input::new(
 }
 
 ///|
-type InputEdit FixedArray[UInt]
+struct InputEdit(FixedArray[UInt])
 
 ///|
 fn ts_input_edit_new(
@@ -28,7 +28,7 @@ fn ts_input_edit_new(
   new_end_byte : UInt,
   start_point : Point,
   old_end_point : Point,
-  new_end_point : Point
+  new_end_point : Point,
 ) -> InputEdit {
   [
     start_byte,
@@ -50,7 +50,7 @@ pub fn InputEdit::new(
   new_end_byte~ : Int,
   start_point~ : Point,
   old_end_point~ : Point,
-  new_end_point~ : Point
+  new_end_point~ : Point,
 ) -> InputEdit {
   let start_byte = int_to_uint(start_byte)
   let old_end_byte = int_to_uint(old_end_byte)
@@ -77,7 +77,7 @@ pub fn DecodeResult::new(code_point~ : Char, bytes_read~ : Int) -> DecodeResult 
 /// If the input is invalid, return `None`.
 pub(open) trait DecodeFunction {
   encoding(Self) -> InputEncoding = _
-  decode(@bytes.View) -> DecodeResult?
+  decode(BytesView) -> DecodeResult?
 }
 
 ///|
@@ -87,7 +87,7 @@ impl DecodeFunction with encoding(self) -> InputEncoding {
 }
 
 ///|
-enum InputEncoding {
+pub(all) enum InputEncoding {
   UTF8
   UTF16LE
   UTF16BE
@@ -100,16 +100,12 @@ pub fn InputEncoding::custom() -> InputEncoding {
 }
 
 ///|
-pub impl DecodeFunction for @encoding.Encoding with encoding(self) -> InputEncoding {
-  match self {
-    @encoding.UTF8 => UTF8
-    @encoding.UTF16LE => UTF16LE
-    @encoding.UTF16BE => UTF16BE
-  }
+pub impl DecodeFunction for InputEncoding with encoding(self) -> InputEncoding {
+  self
 }
 
 ///|
-pub impl DecodeFunction for @encoding.Encoding with decode(bytes) -> DecodeResult? {
+pub impl DecodeFunction for InputEncoding with decode(bytes : BytesView) -> DecodeResult? {
   ignore(bytes)
   None
 }

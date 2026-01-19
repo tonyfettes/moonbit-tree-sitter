@@ -13,7 +13,7 @@ suberror ParseError {
 ///|
 pub fn Query::new(
   language : @tree_sitter.Language,
-  query : @string.View
+  query : StringView,
 ) -> Query raise ParseError {
   enum State {
     Search(StringBuilder)
@@ -58,7 +58,7 @@ pub fn Query::new(
 
   fn parse(
     sexp_list : ArrayView[@sexp.Sexp],
-    buffer : StringBuilder
+    buffer : StringBuilder,
   ) -> ArrayView[@sexp.Sexp] {
     match skip_comment(sexp_list) {
       [Atom(Field(_)) as field, .. sexp_list] => {
@@ -161,18 +161,30 @@ pub fn QueryCursor::exec(self : QueryCursor, node : @tree_sitter.Node) -> Unit {
 
 ///|
 pub fn QueryCursor::captures(
-  self : QueryCursor
+  self : QueryCursor,
 ) -> Iter2[String, @tree_sitter.Node] {
-  Iter2::new(fn(yield_) {
-    captures~: for name, nodes in self.captures {
-      for node in nodes {
-        match yield_(name, node) {
-          IterEnd => break captures~ IterEnd
-          IterContinue => continue
-        }
+  let captures_iterator = self.captures.iter2()
+  let mut name_nodes = match captures_iterator.next() {
+    Some((name, nodes)) => Some((name, nodes.iter()))
+    None => None
+  }
+  Iter::new(() => loop name_nodes {
+    None => None
+    Some((name, nodes)) =>
+      match nodes.next() {
+        Some(node) => Some((name, node))
+        None =>
+          match captures_iterator.next() {
+            Some((name, nodes)) => {
+              let new_name_nodes = Some((name, nodes.iter()))
+              name_nodes = new_name_nodes
+              continue new_name_nodes
+            }
+            None => {
+              name_nodes = None
+              return None
+            }
+          }
       }
-    } else {
-      IterContinue
-    }
   })
 }

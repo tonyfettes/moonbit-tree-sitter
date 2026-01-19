@@ -41,7 +41,7 @@ pub fn Parser::language(self : Parser) -> Language? {
 ///|
 extern "js" fn ts_parser_set_language(
   parser : Parser,
-  language : Language
+  language : Language,
 ) -> Bool =
   #|(parser, language) => {
   #|  try {
@@ -73,7 +73,7 @@ suberror LanguageError {
 /// `MIN_COMPATIBLE_LANGUAGE_VERSION` constants.
 pub fn Parser::set_language(
   self : Parser,
-  language : Language
+  language : Language,
 ) -> Unit raise LanguageError {
   let succeed = ts_parser_set_language(self, language)
   if not(succeed) {
@@ -118,7 +118,10 @@ pub suberror ParseError {
 } derive(Show)
 
 ///|
-fn raise_parse_error(self : Parser, tree : Tree?) -> Tree raise ParseError {
+fn Parser::raise_parse_error(
+  self : Parser,
+  tree : Tree?,
+) -> Tree raise ParseError {
   match tree {
     None =>
       match self.language() {
@@ -133,7 +136,7 @@ fn raise_parse_error(self : Parser, tree : Tree?) -> Tree raise ParseError {
 extern "js" fn ts_parser_parse_string(
   parser : Parser,
   string : String,
-  old_tree : Tree
+  old_tree : Tree,
 ) -> Tree =
   #|(parser, string, oldTree) => {
   #|  return parser.parse(string, oldTree);
@@ -146,7 +149,7 @@ extern "js" fn ts_parser_parse_string(
 pub fn Parser::parse_string(
   self : Parser,
   old_tree? : Tree,
-  string : @string.View
+  string : StringView,
 ) -> Tree raise ParseError {
   let old_ts_tree = match old_tree {
     None => ts_tree_null()
@@ -181,10 +184,10 @@ pub enum LogType {
 }
 
 ///|
-type Logger (String, Bool) -> Unit
+struct Logger((String, Bool) -> Unit)
 
 ///|
-fn Logger::new(log : (LogType, @string.View) -> Unit) -> Logger {
+fn Logger::new(log : (LogType, StringView) -> Unit) -> Logger {
   fn(message, isLex) {
     let logType = if isLex { LogType::Lex } else { LogType::Parse }
     log(logType, message)
@@ -194,20 +197,21 @@ fn Logger::new(log : (LogType, @string.View) -> Unit) -> Logger {
 ///|
 extern "js" fn ts_parser_set_logger(
   parser : Parser,
-  logger : (String, Bool) -> Unit
+  logger : (String, Bool) -> Unit,
 ) =
   #|(parser, logger) => {
   #|  return parser.setLogger(logger);
   #|}
 
-///|g
+///|
+///g
 /// Set the logger that a parser should use during parsing.
 ///
 /// The parser does not take ownership over the logger payload. If a logger was
 /// previously assigned, the caller is responsible for releasing any memory
 /// owned by the previous logger.
 pub fn Parser::set_logger(self : Parser, logger : Logger) -> Unit {
-  ts_parser_set_logger(self, logger.inner())
+  ts_parser_set_logger(self, logger.0)
 }
 
 ///|

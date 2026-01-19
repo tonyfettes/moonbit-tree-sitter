@@ -215,28 +215,14 @@ test {
 }
 
 ///|
-fn merge(
-  self : Map[String, Array[Match]],
-  other : Map[String, Array[Match]]
-) -> Unit {
-  for name, captures in other {
-    if self.get(name) is Some(existing) {
-      existing.append(captures)
-    } else {
-      self[name] = captures
-    }
-  }
-}
-
-///|
 pub fn Node::matches(
   self : Node,
-  node : @tree_sitter.Node
+  node : @tree_sitter.Node,
 ) -> Map[String, Array[Match]]? {
   fn matches(
     self : Node,
     node : @tree_sitter.Node,
-    group : Map[String, Array[Match]]
+    group : Map[String, Array[Match]],
   ) -> Bool {
     let result = match self {
       True => true
@@ -255,7 +241,7 @@ pub fn Node::matches(
       Type(t) => if node.type_() == t { true } else { false }
       Child(e) =>
         if e.matches(node.children()) is Some(matched) {
-          group.merge(matched.group)
+          group.merge_in_place(matched.group)
           true
         } else {
           false
@@ -415,7 +401,7 @@ priv struct State {
   table : Map[String, Array[Int]] // name -> ids
   group : Array[Map[String, Array[Match]]] // captures for each node
   ids : Array[Array[Int]] // ids for each node
-} derive(Show, ToJson)
+}
 
 ///|
 fn State::new() -> State {
@@ -454,7 +440,7 @@ fn State::deriv(self : State, expr : Expr, node : @tree_sitter.Node) -> Expr {
     Never => Never
     Node(n) =>
       if n.matches(node) is Some(group) {
-        self.group[self.index()].merge(group)
+        self.group[self.index()].merge_in_place(group)
         Empty
       } else {
         Never
@@ -530,7 +516,7 @@ struct Match {
 fn State::matches(
   self : State,
   expr : Expr,
-  nodes : Iter[@tree_sitter.Node]
+  nodes : Iter[@tree_sitter.Node],
 ) -> Expr {
   let mut expr = expr
   for node in nodes {
@@ -563,7 +549,7 @@ pub fn Expr::matches(self : Expr, nodes : Iter[@tree_sitter.Node]) -> Match? {
       }
       let group : Map[String, Array[Match]] = Map::new()
       for i in start..<end {
-        group.merge(state.group[i])
+        group.merge_in_place(state.group[i])
       }
       captures.push({ value: state.nodes[start:end], group })
     }
@@ -579,7 +565,7 @@ pub fn Expr::matches(self : Expr, nodes : Iter[@tree_sitter.Node]) -> Match? {
       }
     }
     if count == 0 {
-      matched.merge(g)
+      matched.merge_in_place(g)
     }
   }
   Some({ value: state.nodes, group: matched })

@@ -22,7 +22,6 @@
     "tonyfettes/tree_sitter_markdown",
     "tonyfettes/tree_sitter_json",
     "tonyfettes/tree_sitter_yaml",
-    "tonyfettes/encoding",
     "tonyfettes/tree_sitter/sexp",
     "tonyfettes/tree_sitter_language"
   ],
