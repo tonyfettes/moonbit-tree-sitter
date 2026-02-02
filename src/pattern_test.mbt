@@ -283,5 +283,5 @@ test "pattern" {
       ranges.push((text, start, end))
     }
   }
-  @json.inspect(ranges, content=[["1 == 1", 15, 21]])
+  json_inspect(ranges, content=[["1 == 1", 15, 21]])
 }

@@ -105,7 +105,7 @@ test "parse_rules" {
     #|    for $binderDefinition in $rangeLower..<($rangeUpper) $forBody
     #|
   let rules = parse_rules(@encoding/utf8.encode(rules))
-  @json.inspect(rules, content=[
+  json_inspect(rules, content=[
     {
       "name": "suggested-for-in",
       "search": (

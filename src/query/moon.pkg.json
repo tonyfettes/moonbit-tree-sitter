@@ -1,7 +1,8 @@
 {
   "import": [
     "tonyfettes/tree_sitter/sexp",
-    "tonyfettes/tree_sitter"
+    "tonyfettes/tree_sitter",
+    "moonbitlang/core/queue"
   ],
   "test-import": [
     "tonyfettes/tree_sitter_json",

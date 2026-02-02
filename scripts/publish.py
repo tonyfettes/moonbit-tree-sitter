@@ -83,8 +83,6 @@ def main():
     subprocess.run(
         ["moon", "check", "--target", "native"], cwd=publish_path, check=True
     )
-    shutil.rmtree(publish_path / ".mooncakes")
-    shutil.rmtree(publish_path / "target")
 
 
 if __name__ == "__main__":

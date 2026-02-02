@@ -47,7 +47,14 @@
     "tonyfettes/tree_sitter/grammar",
     "tonyfettes/tree_sitter/node_types",
     "tonyfettes/tree_sitter_language",
-    "tonyfettes/tree_sitter/sexp"
+    "tonyfettes/tree_sitter/sexp",
+    "moonbitlang/core/builtin",
+    {
+      "path": "moonbitlang/core/encoding/utf8",
+      "alias": "encoding/utf8"
+    },
+    "moonbitlang/core/buffer",
+    "moonbitlang/core/int"
   ],
   "supported-targets": ["native"],
   "native-stub": ["tree-sitter.c"],
@@ -55,6 +62,7 @@
     "tonyfettes/tree_sitter_moonbit",
     "tonyfettes/tree_sitter_json",
     "tonyfettes/tree_sitter_markdown",
-    "tonyfettes/tree_sitter_yaml"
+    "tonyfettes/tree_sitter_yaml",
+    "moonbitlang/core/cmp"
   ]
 }
