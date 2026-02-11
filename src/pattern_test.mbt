@@ -2,7 +2,7 @@
 struct Range(Int, Int) derive(Eq, Hash, ToJson)
 
 ///|
-impl Show for Range with output(self : Range, logger : &@builtin.Logger) -> Unit {
+pub impl Show for Range with output(self : Range, logger : &@builtin.Logger) -> Unit {
   logger.write_object(self.0)
 }
 

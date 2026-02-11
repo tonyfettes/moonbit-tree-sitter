@@ -65,7 +65,7 @@ test "node advanced operations" {
   // Test descendant_for_byte_range
   let name_value_node = object_node.descendant_for_byte_range(12, 18)
   inspect(
-    name_value_node.map(Node::text(_)),
+    name_value_node.map(node => node.text()),
     content=(
       #|Some("\"name\": \"test\"")
     ),
@@ -77,7 +77,7 @@ test "node advanced operations" {
     @tree_sitter.Point::new(0, 18),
   )
   inspect(
-    point_node.map(Node::text(_)),
+    point_node.map(node => node.text()),
     content=(
       #|Some("\"name\": \"test\"")
     ),
