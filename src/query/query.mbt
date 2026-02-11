@@ -168,23 +168,25 @@ pub fn QueryCursor::captures(
     Some((name, nodes)) => Some((name, nodes.iter()))
     None => None
   }
-  Iter::new(() => loop name_nodes {
-    None => None
-    Some((name, nodes)) =>
-      match nodes.next() {
-        Some(node) => Some((name, node))
-        None =>
-          match captures_iterator.next() {
-            Some((name, nodes)) => {
-              let new_name_nodes = Some((name, nodes.iter()))
-              name_nodes = new_name_nodes
-              continue new_name_nodes
+  Iter::new(() => {
+    loop name_nodes {
+      None => None
+      Some((name, nodes)) =>
+        match nodes.next() {
+          Some(node) => Some((name, node))
+          None =>
+            match captures_iterator.next() {
+              Some((name, nodes)) => {
+                let new_name_nodes = Some((name, nodes.iter()))
+                name_nodes = new_name_nodes
+                continue new_name_nodes
+              }
+              None => {
+                name_nodes = None
+                return None
+              }
             }
-            None => {
-              name_nodes = None
-              return None
-            }
-          }
-      }
+        }
+    }
   })
 }

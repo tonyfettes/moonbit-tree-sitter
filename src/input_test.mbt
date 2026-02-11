@@ -29,6 +29,8 @@ test "input creation and usage" {
   // Verify the result
   let root = tree.root_node()
   inspect(root.child_count() > 0, content="true")
-  let object_node = root.child(0).unwrap_or_error(@builtin.Failure("No object node found"))
+  let object_node = root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No object node found"))
   inspect(object_node.type_(), content="object")
 }

@@ -1,0 +1,9 @@
+import {
+  "tonyfettes/tree_sitter",
+  "moonbitlang/core/queue",
+  "moonbitlang/core/bench",
+}
+
+import {
+  "tonyfettes/tree_sitter_moonbit",
+} for "test"

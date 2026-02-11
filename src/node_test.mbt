@@ -12,10 +12,16 @@ test "node basic operations" {
   inspect(root.has_error(), content="false")
 
   // Test node navigation
-  let object_node = root.child(0).unwrap_or_error(@builtin.Failure("No object node"))
+  let object_node = root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No object node"))
   inspect(object_node.type_(), content="object")
-  let name_pair = object_node.named_child(0).unwrap_or_error(@builtin.Failure("No name pair"))
-  let value_pair = object_node.named_child(1).unwrap_or_error(@builtin.Failure("No value pair"))
+  let name_pair = object_node
+    .named_child(0)
+    .unwrap_or_error(@builtin.Failure("No name pair"))
+  let value_pair = object_node
+    .named_child(1)
+    .unwrap_or_error(@builtin.Failure("No value pair"))
   inspect(name_pair.type_(), content="pair")
   inspect(value_pair.type_(), content="pair")
 
@@ -25,7 +31,9 @@ test "node basic operations" {
   inspect(root.end_byte() == source_length, content="true")
 
   // Test node text extraction through string method
-  let name_value_node = name_pair.child(1).unwrap_or_error(@builtin.Failure("No name value"))
+  let name_value_node = name_pair
+    .child(1)
+    .unwrap_or_error(@builtin.Failure("No name value"))
   let name_value = name_value_node.string()
   inspect(
     name_value,
@@ -42,7 +50,9 @@ test "node advanced operations" {
     #|{"id": 1, "name": "test", "values": [true, false, null]}
   let tree = parser.parse_string(source)
   let root = tree.root_node()
-  let object_node = root.child(0).unwrap_or_error(@builtin.Failure("No object node"))
+  let object_node = root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No object node"))
 
   // Test named vs unnamed nodes
   inspect(root.is_named(), content="true")
@@ -112,7 +122,9 @@ test "Node::eq" {
   let same_root_node = tree.root_node()
   assert_eq(root_node, same_root_node)
   assert_true(root_node.eq(same_root_node))
-  let object_node = root_node.child(0).unwrap_or_error(@builtin.Failure("No object node"))
+  let object_node = root_node
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No object node"))
   assert_not_eq(root_node, object_node)
 }
 
@@ -123,7 +135,9 @@ test "Node::children" {
     #|[1, 2, 3, 4, 5]
   let tree = parser.parse_string(source)
   let root = tree.root_node()
-  let array_node = root.child(0).unwrap_or_error(@builtin.Failure("No array node"))
+  let array_node = root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No array node"))
   let children = []
   for child in array_node.children() {
     if child.is_named() {

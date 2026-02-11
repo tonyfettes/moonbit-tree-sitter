@@ -28,8 +28,12 @@ test "Tree::copy" {
   inspect(copy_root.type_(), content="document")
 
   // Check child nodes
-  let root_child = root.child(0).unwrap_or_error(@builtin.Failure("No child found"))
-  let copy_root_child = copy_root.child(0).unwrap_or_error(@builtin.Failure("No child found"))
+  let root_child = root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No child found"))
+  let copy_root_child = copy_root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No child found"))
   inspect(root_child.type_(), content="object")
   inspect(copy_root_child.type_(), content="object")
 }
@@ -92,8 +96,12 @@ test "tree with offset" {
   // The content and structure should be the same
   inspect(offset_root.child_count(), content="1")
   inspect(normal_root.child_count(), content="1")
-  let offset_child = offset_root.child(0).unwrap_or_error(@builtin.Failure("No child"))
-  let normal_child = normal_root.child(0).unwrap_or_error(@builtin.Failure("No child"))
+  let offset_child = offset_root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No child"))
+  let normal_child = normal_root
+    .child(0)
+    .unwrap_or_error(@builtin.Failure("No child"))
   inspect(offset_child.type_(), content="object")
   inspect(normal_child.type_(), content="object")
 }

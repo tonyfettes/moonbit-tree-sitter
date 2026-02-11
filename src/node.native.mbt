@@ -795,14 +795,16 @@ pub fn Node::symbols(self : Node) -> Iter[Symbol] {
 pub fn Node::symbol_names(self : Node) -> Iter[String] {
   let language = self.language()
   let symbols = self.symbols()
-  Iter::new(() => while symbols.next() is Some(symbol) {
-    let symbol_name = language.symbol_name(symbol)
-    if symbol_name is None {
-      continue
+  Iter::new(() => {
+    while symbols.next() is Some(symbol) {
+      let symbol_name = language.symbol_name(symbol)
+      if symbol_name is None {
+        continue
+      }
+      break symbol_name
+    } nobreak {
+      None
     }
-    break symbol_name
-  } else {
-    None
   })
 }
 
@@ -823,13 +825,15 @@ pub fn Node::next_symbols(self : Node) -> Iter[Symbol] {
 pub fn Node::next_symbol_names(self : Node) -> Iter[String] {
   let language = self.language()
   let symbols = self.next_symbols()
-  Iter::new(() => while symbols.next() is Some(symbol) {
-    let symbol_name = language.symbol_name(symbol)
-    if symbol_name is None {
-      continue
+  Iter::new(() => {
+    while symbols.next() is Some(symbol) {
+      let symbol_name = language.symbol_name(symbol)
+      if symbol_name is None {
+        continue
+      }
+      break symbol_name
+    } nobreak {
+      None
     }
-    break symbol_name
-  } else {
-    None
   })
 }
